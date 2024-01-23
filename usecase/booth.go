@@ -34,6 +34,7 @@ func RegistBooth() {}
 // Kiểm tra Booth đích trong database đã có Company sở hữu chưa.
 // Kiểm tra phân hạng của Company, nếu không thì xem như Booth đó đã có người đăng ký???
 // Create Request với Type: Change và chờ admin xử lý.
+// Đổi theo số lượng tương ứng mà Company chọn??  
 func ChangeBoothCompany() {}
 
 // Xác thực role từ jwt: admin, company.

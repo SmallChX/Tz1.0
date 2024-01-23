@@ -8,3 +8,5 @@ type CompanyIntroductionUsecase interface {
 	DeleteCompanyIntrocduction() // Quyền: admin, company(xác thực id với jwt). Xóa Company Introduction.
 	UpdateCompanyIntroduction()  // Quyền: conmpany. Cập nhật thông tin Company Introduction.
 }
+
+
