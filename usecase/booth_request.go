@@ -51,4 +51,6 @@ func (b *boothRequestUsecaseImpl) GetAllRequest() ([]model.BoothRequest, error) 
 	return requests, nil
 }
 
-func (b *boothRequestUsecaseImpl)
+func (b *boothRequestUsecaseImpl) CreateRequest(request model.BoothRequest) error {
+
+}
