@@ -1,6 +1,8 @@
 package setting
 
 import (
+	"jobfair2024/model"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -11,7 +13,7 @@ func GetDB() *gorm.DB {
 	return db
 }
 
-func initDB() {
+func InitDB() {
 	dsn := "host=localhost port=5432 dbname=jobfair2023 user=postgres password=123456 sslmode=prefer connect_timeout=10"
 
 	var err error
@@ -20,4 +22,8 @@ func initDB() {
 	if err != nil {
 		panic("can't connect to database")
 	}
+}
+
+func MigrateDB() {
+	db.AutoMigrate(&model.Booth{}, &model.UserAccount{})
 }

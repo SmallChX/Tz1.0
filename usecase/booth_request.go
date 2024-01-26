@@ -1,5 +1,10 @@
 package usecase
 
+import (
+	"jobfair2024/model"
+	"jobfair2024/repository"
+)
+
 // Đây là Request của Company đặt Booth.
 // Quyền xử lý: Admin. Quyền thêm, sửa: Company.
 type BoothRequestUsecase interface {
@@ -14,3 +19,36 @@ type BoothRequestUsecase interface {
 	DeleteRequest() // Quyền xử lý: company. Chuyển status của Request sang Deleted.
 	// Đối với Reject và Delete, không xóa mà chỉ chuyển status => Xử lý và đối chứng sau này.
 }
+
+type boothRequestUsecaseImpl struct {
+	boothRepository        repository.BoothRepository
+	boothRequestRepository repository.BoothRequestRepository
+}
+
+func NewBoothRequestUsecase(
+	boothRepository repository.BoothRepository,
+	boothRequestRepository repository.BoothRequestRepository,
+) BoothRequestUsecase {
+	return &boothRequestUsecaseImpl{
+		boothRepository:        boothRepository,
+		boothRequestRepository: boothRequestRepository,
+	}
+}
+
+func (b *boothRequestUsecaseImpl) GetRequest(requestID int64) (*model.BoothRequest, error) {
+	request, err := b.boothRequestRepository.FindByID(requestID)
+	if err != nil {
+		return nil, err
+	}
+	return request, nil
+}
+
+func (b *boothRequestUsecaseImpl) GetAllRequest() ([]model.BoothRequest, error) {
+	requests, err := b.boothRequestRepository.FindAll()
+	if err != nil {
+		return nil, err
+	}
+	return requests, nil
+}
+
+func (b *boothRequestUsecaseImpl)
