@@ -5,20 +5,22 @@ import (
 	"jobfair2024/model"
 	"jobfair2024/repository"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Đây là Request của Company đặt Booth.
 // Quyền xử lý: Admin. Quyền thêm, sửa: Company.
 type BoothRequestUsecase interface {
-	GetRequest()    // Lấy một Request
-	GetAllRequest() // Lấy tất cả Request
-	CreateRequest() // Thêm Request (Company Regist Booths), một Company có thể có nhiều Request.
+	GetRequest(requestID int64) (*model.BoothRequest, error) 
+	GetAllRequest() ([]model.BoothRequest, error)
+	CreateRequest(c *gin.Context, booths *BoothRequestInfo) error
 	// Một Request có thể có nhiều hơn 1 Booth.
 	// Khi đăng ký, khởi tạo Request với status là Pending.
 	// Trong quá trình Pending, Admin sẽ xử lý, dựa vào policy và thanh toán.
-	AcceptRequest() // Quyền xử lý: admin. Chuyển status của Request sang Accepted.
-	RejectRequest() //  Quyền xử lý: admin. Chuyển status của Request sang Rejected.
-	DeleteRequest() // Quyền xử lý: company. Chuyển status của Request sang Deleted.
+	AcceptRequest(c *gin.Context, requestID int64) error
+	RejectRequest(c *gin.Context, requestID int64) error //  Quyền xử lý: admin. Chuyển status của Request sang Rejected.
+	DeleteRequest(c *gin.Context, requestID int64) error // Quyền xử lý: company. Chuyển status của Request sang Deleted.
 	// Đối với Reject và Delete, không xóa mà chỉ chuyển status => Xử lý và đối chứng sau này.
 }
 
@@ -63,48 +65,61 @@ func (b *boothRequestUsecaseImpl) GetAllRequest() ([]model.BoothRequest, error) 
 	return requests, nil
 }
 
-func (b *boothRequestUsecaseImpl) CreateRequest(request *BoothRequestInfo) error {
-	// Check role: company
-	switch request.Type {
+func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context,requestInfo *BoothRequestInfo) error {
+	booths, err := b.boothRepository.FindByIds(requestInfo.BoothIDList)
+
+	if err != nil {
+		return err
+	}
+
+	switch requestInfo.Type {
 	case string(model.RegistTypeRequest):
-		if !isAvailableBooth(b.boothRepository, request.BoothIDList) {
+		if !isAvailableBooth(booths) {
 			return errors.New("booths not available")
 		}
-		if !isContiniousBooths(request.BoothIDList) {
+		if !isContiniousBooths(booths) {
 			return errors.New("booth not continious")
 		}
 	case string(model.ChangeTypeRequest):
-		if len(request.BoothIDList) != len(request.DestinationBoothIDList) {
+		if len(requestInfo.BoothIDList) != len(requestInfo.DestinationBoothIDList) {
 			return errors.New("not match booths number")
 		}
-		if !isAvailableBooth(b.boothRepository, request.DestinationBoothIDList) {
+		if !isAvailableBooth(booths) {
 			return errors.New("booths not available")
 		}
-		if !isContiniousBooths(request.DestinationBoothIDList) {
+		if !isContiniousBooths(booths) {
 			return errors.New("booth not continious")
 		}
-		if !isCompanyBoothOwner(b.boothRepository, request.CompanyID, request.BoothIDList) {
+		if !isCompanyBoothOwner(requestInfo.CompanyID, booths) {
 			return errors.New("not match company own booths")
 		}
 	case string(model.RemoveTypeRequest):
-		if !isCompanyBoothOwner(b.boothRepository, request.CompanyID, request.BoothIDList) {
+		if !isCompanyBoothOwner(requestInfo.CompanyID, booths) {
 			return errors.New("not match company own booths")
 		}
-
 	default:
 		return errors.New("no match request type found!")
+	}
+
+	request := model.BoothRequest {
+		Booths: booths,
+		CompanyID: requestInfo.CompanyID,
+		Status: model.PedingRequest,
+		Type: model.TypeRequest(requestInfo.Type),
+		Reason: requestInfo.Reason,
+		DestinationBoothID: requestInfo.DestinationBoothIDList,
+	}
+
+	err = b.boothRequestRepository.Create(&request)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func isAvailableBooth(boothRepository repository.BoothRepository, boothIDList []int64) bool {
-	for _, boothID := range boothIDList {
-		booth, err := boothRepository.FindByID(boothID)
-		if err != nil {
-			return false
-		}
-
+func isAvailableBooth(booths []model.Booth) bool {
+	for _, booth := range booths {
 		if booth.CompanyID != 0 {
 			return false
 		}
@@ -113,23 +128,141 @@ func isAvailableBooth(boothRepository repository.BoothRepository, boothIDList []
 	return true
 }
 
-func isContiniousBooths(boothIDList []int64) bool {
+func isContiniousBooths(booths []model.Booth) bool {
 	temp := 0
-	for _, boothID := range boothIDList {
-		if temp != 0 && int(boothID)-temp > 1 {
+	for _, booth := range booths {
+		if temp != 0 && int(booth.ID)-temp > 1 {
 			return false
 		}
-		temp = int(boothID)
+		temp = int(booth.ID)
 	}
 	return true
 }
 
-func isCompanyBoothOwner(boothRepository repository.BoothRepository, companyID int64, boothIDList []int64) bool {
-	for _, boothID := range boothIDList {
-		booth, _ := boothRepository.FindByID(boothID)
+func isCompanyBoothOwner(companyID int64, booths []model.Booth) bool {
+	for _, booth := range booths {
 		if booth.CompanyID != companyID {
 			return false
 		}
 	}
 	return true
 }
+
+func (b *boothRequestUsecaseImpl) AcceptRequest(c *gin.Context, requestID int64) error {
+	// check role: admin
+
+	request, err := b.boothRequestRepository.FindByID(requestID)
+	if err != nil {
+		return err
+	}
+
+	if request.Status != model.PedingRequest {
+		return errors.New("request is invalid")
+	}
+
+	switch request.Type {
+	case model.RegistTypeRequest:
+		if !isAvailableBooth(request.Booths) {
+			return errors.New("booths not available")
+		}
+		for _, booth := range request.Booths {
+			// Cập nhật CompanyID cho booth
+			booth.CompanyID = request.CompanyID
+			err = b.boothRepository.Update(&booth)
+			if err != nil {
+				return err
+			}
+		}
+	case model.ChangeTypeRequest:
+		desBooths, err := b.boothRepository.FindByIds(request.DestinationBoothID)
+		if err != nil {
+			return err
+		}
+
+		if !isAvailableBooth(desBooths) {
+			return errors.New("booths not available")
+		}
+		if !isCompanyBoothOwner(request.CompanyID, request.Booths) {
+			return errors.New("not match company own booths")
+		}
+
+		for _, booth := range request.Booths {
+			booth.CompanyID = 0
+			err = b.boothRepository.Update(&booth)
+			if err != nil {
+				return err
+			}
+		}
+		for _, booth := range desBooths {
+			booth.CompanyID = request.CompanyID
+			err = b.boothRepository.Update(&booth)
+			if err != nil {
+				return err
+			}
+		}
+	case model.RemoveTypeRequest:
+		if !isCompanyBoothOwner(requestID, request.Booths) {
+			return errors.New("not match company own booths")
+		}
+		for _, booth := range request.Booths {
+			booth.CompanyID = 0
+			err = b.boothRepository.Update(&booth)
+			if err != nil {
+				return err
+			}
+		}
+	default:
+		return errors.New("no match request type found!")
+	}
+
+	request.Status = model.AcceptedRequest
+	err = b.boothRequestRepository.Update(request)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *boothRequestUsecaseImpl) RejectRequest(c *gin.Context, requestID int64) error {
+	// kiểm tra quyền admin
+	request, err := b.boothRequestRepository.FindByID(requestID)
+	if err != nil {
+		return err
+	}
+
+	request.Status = model.RejectedRequest
+	err = b.boothRequestRepository.Update(request)
+	
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *boothRequestUsecaseImpl) DeleteRequest(c *gin.Context, requestID int64) error {
+	err := b.boothRequestRepository.Delete(requestID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *boothRequestUsecaseImpl) FinishRequest(c *gin.Context, requestID int64) error {
+	request, err := b.boothRequestRepository.FindByID(requestID)
+	if err != nil {
+		return err
+	}
+
+	request.Status = model.FinishedRequest
+
+	err = b.boothRequestRepository.Update(request)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+

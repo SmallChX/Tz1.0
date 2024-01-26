@@ -12,6 +12,7 @@ type BoothRepository interface {
 	Delete(id int64) error
 	FindByID(id int64) (*model.Booth, error)
 	FindAll() ([]model.Booth, error)
+	FindByIds(ids []int64) ([]model.Booth, error) 
 }
 
 type boothRepositoryImpl struct {
@@ -52,4 +53,17 @@ func (repo *boothRepositoryImpl) FindAll() ([]model.Booth, error) {
 	var booths []model.Booth
 	err := repo.db.Find(&booths).Error
 	return booths, err
+}
+
+// FindBoothsByIds nhận vào một slice của int64 và trả về một slice của Booth và error
+func (repo *boothRepositoryImpl) FindByIds(ids []int64) ([]model.Booth, error) {
+    var booths []model.Booth
+
+    // Truy vấn cơ sở dữ liệu sử dụng GORM
+    result := repo.db.Where("id IN ?", ids).Find(&booths)
+    if result.Error != nil {
+        return nil, result.Error
+    }
+
+    return booths, nil
 }

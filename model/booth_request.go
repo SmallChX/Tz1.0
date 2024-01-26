@@ -25,5 +25,5 @@ type BoothRequest struct {
 	Type      TypeRequest
 	// Base on type, there are some extend information from booth request
 	Reason             string // request remove
-	DestinationBoothID int64  // request change
+	DestinationBoothID []int64  // request change
 }

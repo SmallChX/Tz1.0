@@ -11,13 +11,9 @@ import (
 // Mỗi Booth chỉ được có một Company.
 // Quyền xử lý: admin, company.
 type BoothUsecase interface {
-	GetBooth(c *gin.Context, boothID int64) (*model.Booth, error)   // Lấy thông tin của Booth. Chưa biết dùng ở đâu
-	GetAllBooths(c* gin.Context) ([]model.Booth, error) // Lấy tất cả danh sách của Booth
-	// RegistBooth()  // Đăng ký Booth => Tạo một Request gồm Id Company (lấy từ jwt)
-	// và danh sách các Booths.
-	// Quyền xử lý: Admin
-	// ChangeBoothCompany() // Đổi Company của Booth (đối với các Company được yêu cầu trực tiếp or muộn)
-	// RemoveBoothCompany() // Xóa Company của Booth (xóa các Company khi được yêu cầu trực tiếp với admin)
+	GetBooth(c *gin.Context, boothID int64) (*model.Booth, error) // Lấy thông tin của Booth. Chưa biết dùng ở đâu
+	GetAllBooths(c *gin.Context) ([]model.Booth, error)           // Lấy tất cả danh sách của Booth
+	
 }
 
 type boothImpl struct {
@@ -31,7 +27,7 @@ func NewBoothUsecase(
 		boothRepository: boothRepository,
 	}
 }
-func (b *boothImpl) GetBooth(c* gin.Context, boothID int64) (*model.Booth, error) {
+func (b *boothImpl) GetBooth(c *gin.Context, boothID int64) (*model.Booth, error) {
 	// Xác thực role từ jwt: company và admin.
 	// Lấy thông tin từ database và return.
 	// Đối với company: Hiển thị và có quyền xử lý Booth.
@@ -44,7 +40,7 @@ func (b *boothImpl) GetBooth(c* gin.Context, boothID int64) (*model.Booth, error
 	return booth, nil
 }
 
-func (b *boothImpl) GetAllBooths(c* gin.Context) ([]model.Booth, error) {
+func (b *boothImpl) GetAllBooths(c *gin.Context) ([]model.Booth, error) {
 	// Xác thực role từ jwt: company và admin.
 	// Đối với company, kiểm tra thêm phân hạng, dựa vào phân hạng mà trả về danh sách tương ứng.
 	// Lấy thông tin từ database và return.
@@ -56,7 +52,6 @@ func (b *boothImpl) GetAllBooths(c* gin.Context) ([]model.Booth, error) {
 
 	return booths, nil
 }
-
 
 // Xác thực role từ jwt: admin, company
 // Kiểm tra Booth đích trong database đã có Company sở hữu chưa.
