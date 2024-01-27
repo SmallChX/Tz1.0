@@ -22,8 +22,12 @@ func InitDB() {
 	if err != nil {
 		panic("can't connect to database")
 	}
+	
 }
 
 func MigrateDB() {
-	db.AutoMigrate(&model.Booth{}, &model.UserAccount{})
+	err := db.AutoMigrate(&model.Booth{}, &model.UserAccount{}, &model.BoothRequest{})
+	if err != nil {
+		panic("failed to migrate database")
+	}
 }

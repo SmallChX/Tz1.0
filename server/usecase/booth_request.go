@@ -67,7 +67,11 @@ func (b *boothRequestUsecaseImpl) GetAllRequest() ([]model.BoothRequest, error) 
 
 func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context,requestInfo *BoothRequestInfo) error {
 	booths, err := b.boothRepository.FindByIds(requestInfo.BoothIDList)
+	if err != nil {
+		return err
+	}
 
+	desBooths, err := b.boothRepository.FindByIds(requestInfo.DestinationBoothIDList)
 	if err != nil {
 		return err
 	}
@@ -84,7 +88,7 @@ func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context,requestInfo *Boot
 		if len(requestInfo.BoothIDList) != len(requestInfo.DestinationBoothIDList) {
 			return errors.New("not match booths number")
 		}
-		if !isAvailableBooth(booths) {
+		if !isAvailableBooth(desBooths) {
 			return errors.New("booths not available")
 		}
 		if !isContiniousBooths(booths) {
@@ -107,7 +111,7 @@ func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context,requestInfo *Boot
 		Status: model.PedingRequest,
 		Type: model.TypeRequest(requestInfo.Type),
 		Reason: requestInfo.Reason,
-		DestinationBoothID: requestInfo.DestinationBoothIDList,
+		DestinationBooths: desBooths,
 	}
 
 	err = b.boothRequestRepository.Create(&request)
@@ -174,11 +178,8 @@ func (b *boothRequestUsecaseImpl) AcceptRequest(c *gin.Context, requestID int64)
 			}
 		}
 	case model.ChangeTypeRequest:
-		desBooths, err := b.boothRepository.FindByIds(request.DestinationBoothID)
-		if err != nil {
-			return err
-		}
-
+		desBooths := request.DestinationBooths
+		
 		if !isAvailableBooth(desBooths) {
 			return errors.New("booths not available")
 		}

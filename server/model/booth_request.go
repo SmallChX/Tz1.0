@@ -18,12 +18,13 @@ const (
 )
 
 type BoothRequest struct {
-	RequestID int64
+	RequestID int64	`gorm:"primaryKey"`
 	Booths    []Booth `gorm:"many2many:request_booths;"`
 	CompanyID int64
 	Status    StatusRequest
 	Type      TypeRequest
 	// Base on type, there are some extend information from booth request
 	Reason             string // request remove
-	DestinationBoothID []int64  // request change
+	// Sử dụng một struct riêng biệt để biểu diễn quan hệ
+	DestinationBooths []Booth `gorm:"many2many:des_request_booths;"`
 }

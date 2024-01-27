@@ -8,7 +8,7 @@ import (
 
 func main() {
 	setting.InitDB()
-	setting.MigrateDB()
+	// setting.MigrateDB()
 
 	router := gin.Default()
 	api := router.Group("/api")
