@@ -12,8 +12,8 @@ import (
 // Đây là Request của Company đặt Booth.
 // Quyền xử lý: Admin. Quyền thêm, sửa: Company.
 type BoothRequestUsecase interface {
-	GetRequest(requestID int64) (*model.BoothRequest, error) 
-	GetAllRequest() ([]model.BoothRequest, error)
+	GetRequest(c *gin.Context, request int64) (*BoothRequestInfo, error)
+	GetAllRequest(c *gin.Context) ([]*BoothRequestInfo, error)
 	CreateRequest(c *gin.Context, booths *BoothRequestInfo) error
 	// Một Request có thể có nhiều hơn 1 Booth.
 	// Khi đăng ký, khởi tạo Request với status là Pending.
@@ -49,31 +49,63 @@ type BoothRequestInfo struct {
 	DestinationBoothIDList []int64 `json:"des_booth_id"`
 }
 
-func (b *boothRequestUsecaseImpl) GetRequest(requestID int64) (*model.BoothRequest, error) {
+func getBoothIDs(booths []model.Booth) []int64 {
+	var ids []int64
+	for _, booth := range booths {
+		ids = append(ids, booth.ID)
+	}
+
+	return ids
+}
+
+func (b *boothRequestUsecaseImpl) GetRequest(c *gin.Context, requestID int64) (*BoothRequestInfo, error) {
 	request, err := b.boothRequestRepository.FindByID(requestID)
 	if err != nil {
 		return nil, err
 	}
-	return request, nil
+
+	return &BoothRequestInfo{
+		BoothIDList:            getBoothIDs(request.Booths),
+		CompanyID:              request.CompanyID,
+		Type:                   string(request.Type),
+		CreateAt:               request.CreateAt,
+		Reason:                 request.Reason,
+		DestinationBoothIDList: getBoothIDs(request.DestinationBooths),
+	}, nil
 }
 
-func (b *boothRequestUsecaseImpl) GetAllRequest() ([]model.BoothRequest, error) {
-	requests, err := b.boothRequestRepository.FindAll()
+func (b *boothRequestUsecaseImpl) GetAllRequest(c *gin.Context) ([]*BoothRequestInfo, error) {
+	result, err := b.boothRequestRepository.FindAll()
 	if err != nil {
 		return nil, err
 	}
-	return requests, nil
+
+	requestList := make([]*BoothRequestInfo, len(result))
+	for _, request := range result {
+		requestList = append(requestList, &BoothRequestInfo{
+			BoothIDList:            getBoothIDs(request.Booths),
+			CompanyID:              request.CompanyID,
+			Type:                   string(request.Type),
+			CreateAt:               request.CreateAt,
+			Reason:                 request.Reason,
+			DestinationBoothIDList: getBoothIDs(request.DestinationBooths),
+		})
+	}
+	return requestList, nil
 }
 
-func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context,requestInfo *BoothRequestInfo) error {
+func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context, requestInfo *BoothRequestInfo) error {
 	booths, err := b.boothRepository.FindByIds(requestInfo.BoothIDList)
 	if err != nil {
 		return err
 	}
 
-	desBooths, err := b.boothRepository.FindByIds(requestInfo.DestinationBoothIDList)
-	if err != nil {
-		return err
+	var desBooths []model.Booth
+	if len(requestInfo.DestinationBoothIDList) > 0 {
+		desBooths, err = b.boothRepository.FindByIds(requestInfo.DestinationBoothIDList)
+		if err != nil {
+			return err
+		}
 	}
 
 	switch requestInfo.Type {
@@ -105,16 +137,15 @@ func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context,requestInfo *Boot
 		return errors.New("no match request type found!")
 	}
 
-	request := model.BoothRequest {
-		Booths: booths,
-		CompanyID: requestInfo.CompanyID,
-		Status: model.PedingRequest,
-		Type: model.TypeRequest(requestInfo.Type),
-		Reason: requestInfo.Reason,
+	err = b.boothRequestRepository.Create(&model.BoothRequest{
+		Booths:            booths,
+		CompanyID:         1,
+		Status:            model.PedingRequest,
+		Type:              model.TypeRequest(requestInfo.Type),
+		Reason:            requestInfo.Reason,
 		DestinationBooths: desBooths,
-	}
-
-	err = b.boothRequestRepository.Create(&request)
+		CreateAt:          time.Now(),
+	})
 	if err != nil {
 		return err
 	}
@@ -179,7 +210,7 @@ func (b *boothRequestUsecaseImpl) AcceptRequest(c *gin.Context, requestID int64)
 		}
 	case model.ChangeTypeRequest:
 		desBooths := request.DestinationBooths
-		
+
 		if !isAvailableBooth(desBooths) {
 			return errors.New("booths not available")
 		}
@@ -234,7 +265,7 @@ func (b *boothRequestUsecaseImpl) RejectRequest(c *gin.Context, requestID int64)
 
 	request.Status = model.RejectedRequest
 	err = b.boothRequestRepository.Update(request)
-	
+
 	if err != nil {
 		return err
 	}
@@ -266,4 +297,3 @@ func (b *boothRequestUsecaseImpl) FinishRequest(c *gin.Context, requestID int64)
 
 	return nil
 }
-

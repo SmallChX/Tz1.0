@@ -37,6 +37,8 @@ func (repo *boothRequestRepositoryImpl) Update(boothRequest *model.BoothRequest)
 
 // Delete removes a Booth from the database
 func (repo *boothRequestRepositoryImpl) Delete(id int64) error {
+	request, _ := repo.FindByID(id)
+	repo.db.Model(&request).Select("Booths", "DestinationBooths").Delete(request)
 	return repo.db.Delete(&model.BoothRequest{}, id).Error
 }
 
