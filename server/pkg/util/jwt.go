@@ -1,8 +1,9 @@
 package util
 
 import (
-	"fmt"
+	"errors"
 	"jobfair2024/model"
+	"jobfair2024/usecase"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,11 +16,11 @@ import (
 type Claims struct {
 	UserID   int64          `json:"user_id"`
 	UserRole model.UserRole `json:"user_role"`
+	Email    string
 	jwt.StandardClaims
 }
 
-func GenerateToken(c *gin.Context, user model.UserAccount) error {
-
+func GenerateToken(c *gin.Context, userInfo *usecase.UserInfo) error {
 	tokenLifespan, err := strconv.Atoi(os.Getenv("TOKEN_HOUR_LIFESPAN"))
 	if err != nil {
 		return err
@@ -27,8 +28,9 @@ func GenerateToken(c *gin.Context, user model.UserAccount) error {
 
 	expiredTime := time.Now().Add(time.Hour * time.Duration(tokenLifespan))
 	claims := &Claims{
-		UserID:   user.ID,
-		UserRole: user.Role,
+		UserID:   userInfo.ID,
+		UserRole: userInfo.Role,
+		Email:    userInfo.Email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expiredTime.Unix(),
 		},
@@ -72,18 +74,17 @@ func validateToken(c *gin.Context) (*Claims, error) {
 	}
 
 	if !token.Valid {
-		return nil, fmt.Errorf("Invalid token")
+		return nil, errors.New("invalid token")
 	}
 
 	return claims, nil
 }
 
 func GetUserRole(c *gin.Context, requiredRole model.UserRole) (model.UserRole, error) {
-    claims, err := validateToken(c)
-    if err != nil {
-        return "", err
-    }
+	claims, err := validateToken(c)
+	if err != nil {
+		return "", err
+	}
 
-    return claims.UserRole, nil
+	return claims.UserRole, nil
 }
-

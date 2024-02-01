@@ -116,6 +116,7 @@ func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context, requestInfo *Boo
 		if !isContiniousBooths(booths) {
 			return errors.New("booth not continious")
 		}
+		break
 	case string(model.ChangeTypeRequest):
 		if len(requestInfo.BoothIDList) != len(requestInfo.DestinationBoothIDList) {
 			return errors.New("not match booths number")
@@ -129,10 +130,12 @@ func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context, requestInfo *Boo
 		if !isCompanyBoothOwner(requestInfo.CompanyID, booths) {
 			return errors.New("not match company own booths")
 		}
+		break
 	case string(model.RemoveTypeRequest):
 		if !isCompanyBoothOwner(requestInfo.CompanyID, booths) {
 			return errors.New("not match company own booths")
 		}
+		break
 	default:
 		return errors.New("no match request type found!")
 	}
@@ -146,6 +149,7 @@ func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context, requestInfo *Boo
 		DestinationBooths: desBooths,
 		CreateAt:          time.Now(),
 	})
+
 	if err != nil {
 		return err
 	}

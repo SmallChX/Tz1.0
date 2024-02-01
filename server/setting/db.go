@@ -26,7 +26,11 @@ func InitDB() {
 }
 
 func MigrateDB() {
-	err := db.AutoMigrate(&model.Booth{}, &model.UserAccount{}, &model.BoothRequest{})
+	db.AutoMigrate(&model.CompanyInformation{})
+	err := db.AutoMigrate(
+		&model.Booth{}, &model.UserAccount{}, &model.BoothRequest{},
+		&model.AdminInformation{}, &model.StudentInformation{},
+	)
 	if err != nil {
 		panic("failed to migrate database")
 	}

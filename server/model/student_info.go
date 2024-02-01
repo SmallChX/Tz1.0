@@ -11,4 +11,7 @@ type StudentInformation struct {
 	PhoneNumber string
 	Department  string
 	Major       string
+
+	UserAccountID int64 `gorm:"primaryKey"`
+	UserAccount `gorm:"foreignKey:UserAccountID"`
 }

@@ -20,7 +20,7 @@ const (
 )
 
 type BoothRequest struct {
-	RequestID int64   `gorm:"primaryKey; autoIncrement"`
+	RequestID int64   `gorm:"primaryKey"`
 	Booths    []Booth `gorm:"many2many:request_booths;"`
 	CompanyID int64
 	Status    StatusRequest

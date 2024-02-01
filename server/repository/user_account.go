@@ -13,6 +13,7 @@ type UserAccountRepository interface {
 	Delete(id int64) error
 	FindByID(id int64) (*model.UserAccount, error)
 	FindAll() ([]model.UserAccount, error)
+	FindByUsername(username string) (*model.UserAccount, error)
 }
 
 type userAccountRepositoryImpl struct {
@@ -56,4 +57,10 @@ func (repo *userAccountRepositoryImpl) FindAll() ([]model.UserAccount, error) {
 	var users []model.UserAccount
 	err := repo.db.Find(&users).Error
 	return users, err
+}
+
+func (repo *userAccountRepositoryImpl) FindByUsername(username string) (*model.UserAccount, error) {
+	var user model.UserAccount
+	err := repo.db.Where("username = ?", username).First(&user).Error
+	return &user, err
 }

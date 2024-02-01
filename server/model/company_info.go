@@ -9,9 +9,11 @@ const (
 )
 
 type CompanyInformation struct {
-	UserID      int64
-	IdCompany   int64
+	ID   int64 `gorm:"unique"`
 	CompanyName string
+
+	UserAccountID int64
+	UserAccount   UserAccount `gorm:"foreignKey:UserAccountID"`
 
 	// Contact Represent = HR
 	RepresentName        string
@@ -20,6 +22,6 @@ type CompanyInformation struct {
 
 	// Level in Contribution
 	ContributionLevel CompanyContributionLevel
-	Booths            []Booth        `gorm:"foreignKey:CompanyID"` // Booth Own
-	BoothRequests     []BoothRequest `gorm:"foreignKey:RequestID"`
+	Booths            []Booth        `gorm:"foreignKey:CompanyID;references:ID"` // Booth Own
+	BoothRequests     []BoothRequest `gorm:"foreignKey:CompanyID;references:ID"`
 }

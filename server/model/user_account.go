@@ -9,8 +9,8 @@ const (
 )
 
 type UserAccount struct {
-	ID       int64
-	Account  string
+	ID       int64 `gorm:"primaryKey"`
+	Username  string
 	Password string
 	Role     UserRole
 	Email    string
