@@ -12,15 +12,15 @@ import (
 // Đây là Request của Company đặt Booth.
 // Quyền xử lý: Admin. Quyền thêm, sửa: Company.
 type BoothRequestUsecase interface {
-	GetRequest(c *gin.Context, request int64) (*BoothRequestInfo, error)
-	GetAllRequest(c *gin.Context) ([]*BoothRequestInfo, error)
-	CreateRequest(c *gin.Context, booths *BoothRequestInfo) error
+	GetRequest(c *gin.Context, userInfo *UserInfo, request int64) (*BoothRequestInfo, error)
+	GetAllRequest(c *gin.Context, userInfo *UserInfo) ([]*BoothRequestInfo, error)
+	CreateRequest(c *gin.Context, userInfo *UserInfo, booths *BoothRequestInfo) error
 	// Một Request có thể có nhiều hơn 1 Booth.
 	// Khi đăng ký, khởi tạo Request với status là Pending.
 	// Trong quá trình Pending, Admin sẽ xử lý, dựa vào policy và thanh toán.
-	AcceptRequest(c *gin.Context, requestID int64) error
-	RejectRequest(c *gin.Context, requestID int64) error //  Quyền xử lý: admin. Chuyển status của Request sang Rejected.
-	DeleteRequest(c *gin.Context, requestID int64) error // Quyền xử lý: company. Chuyển status của Request sang Deleted.
+	AcceptRequest(c *gin.Context, userInfo *UserInfo, requestID int64) error
+	RejectRequest(c *gin.Context, userInfo *UserInfo, requestID int64) error //  Quyền xử lý: admin. Chuyển status của Request sang Rejected.
+	DeleteRequest(c *gin.Context, userInfo *UserInfo, requestID int64) error // Quyền xử lý: company. Chuyển status của Request sang Deleted.
 	// Đối với Reject và Delete, không xóa mà chỉ chuyển status => Xử lý và đối chứng sau này.
 }
 
@@ -58,7 +58,7 @@ func getBoothIDs(booths []model.Booth) []int64 {
 	return ids
 }
 
-func (b *boothRequestUsecaseImpl) GetRequest(c *gin.Context, requestID int64) (*BoothRequestInfo, error) {
+func (b *boothRequestUsecaseImpl) GetRequest(c *gin.Context, userInfo *UserInfo, requestID int64) (*BoothRequestInfo, error) {
 	request, err := b.boothRequestRepository.FindByID(requestID)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (b *boothRequestUsecaseImpl) GetRequest(c *gin.Context, requestID int64) (*
 	}, nil
 }
 
-func (b *boothRequestUsecaseImpl) GetAllRequest(c *gin.Context) ([]*BoothRequestInfo, error) {
+func (b *boothRequestUsecaseImpl) GetAllRequest(c *gin.Context, userInfo *UserInfo) ([]*BoothRequestInfo, error) {
 	result, err := b.boothRequestRepository.FindAll()
 	if err != nil {
 		return nil, err
@@ -94,7 +94,11 @@ func (b *boothRequestUsecaseImpl) GetAllRequest(c *gin.Context) ([]*BoothRequest
 	return requestList, nil
 }
 
-func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context, requestInfo *BoothRequestInfo) error {
+func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context, userInfo *UserInfo, requestInfo *BoothRequestInfo) error {
+	if err := validateCompanyRole(userInfo); err != nil {
+		return err
+	}
+
 	booths, err := b.boothRepository.FindByIds(requestInfo.BoothIDList)
 	if err != nil {
 		return err
@@ -127,12 +131,12 @@ func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context, requestInfo *Boo
 		if !isContiniousBooths(booths) {
 			return errors.New("booth not continious")
 		}
-		if !isCompanyBoothOwner(requestInfo.CompanyID, booths) {
+		if !isCompanyBoothOwner(userInfo.ID, booths) {
 			return errors.New("not match company own booths")
 		}
 		break
 	case string(model.RemoveTypeRequest):
-		if !isCompanyBoothOwner(requestInfo.CompanyID, booths) {
+		if !isCompanyBoothOwner(userInfo.ID, booths) {
 			return errors.New("not match company own booths")
 		}
 		break
@@ -142,7 +146,7 @@ func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context, requestInfo *Boo
 
 	err = b.boothRequestRepository.Create(&model.BoothRequest{
 		Booths:            booths,
-		CompanyID:         1,
+		CompanyID:         userInfo.ID,
 		Status:            model.PedingRequest,
 		Type:              model.TypeRequest(requestInfo.Type),
 		Reason:            requestInfo.Reason,
@@ -187,8 +191,10 @@ func isCompanyBoothOwner(companyID int64, booths []model.Booth) bool {
 	return true
 }
 
-func (b *boothRequestUsecaseImpl) AcceptRequest(c *gin.Context, requestID int64) error {
-	// check role: admin
+func (b *boothRequestUsecaseImpl) AcceptRequest(c *gin.Context, userInfo *UserInfo, requestID int64) error {
+	if err := validateAdminRole(userInfo); err != nil {
+		return err
+	}
 
 	request, err := b.boothRequestRepository.FindByID(requestID)
 	if err != nil {
@@ -260,8 +266,11 @@ func (b *boothRequestUsecaseImpl) AcceptRequest(c *gin.Context, requestID int64)
 	return nil
 }
 
-func (b *boothRequestUsecaseImpl) RejectRequest(c *gin.Context, requestID int64) error {
-	// kiểm tra quyền admin
+func (b *boothRequestUsecaseImpl) RejectRequest(c *gin.Context, userInfo *UserInfo, requestID int64) error {
+	if err := validateAdminRole(userInfo); err != nil {
+		return err
+	}
+
 	request, err := b.boothRequestRepository.FindByID(requestID)
 	if err != nil {
 		return err
@@ -277,8 +286,19 @@ func (b *boothRequestUsecaseImpl) RejectRequest(c *gin.Context, requestID int64)
 	return nil
 }
 
-func (b *boothRequestUsecaseImpl) DeleteRequest(c *gin.Context, requestID int64) error {
-	err := b.boothRequestRepository.Delete(requestID)
+func (b *boothRequestUsecaseImpl) DeleteRequest(c *gin.Context, userInfo *UserInfo, requestID int64) error {
+	if err := validateCompanyRole(userInfo); err != nil {
+		return err
+	}
+	request, err := b.boothRepository.FindByID(requestID)
+	if err != nil {
+		return err
+	}
+	if request.CompanyID != userInfo.ID {
+		return errors.New("not have right")
+	}
+
+	err = b.boothRequestRepository.Delete(requestID)
 	if err != nil {
 		return err
 	}
@@ -286,7 +306,11 @@ func (b *boothRequestUsecaseImpl) DeleteRequest(c *gin.Context, requestID int64)
 	return nil
 }
 
-func (b *boothRequestUsecaseImpl) FinishRequest(c *gin.Context, requestID int64) error {
+func (b *boothRequestUsecaseImpl) FinishRequest(c *gin.Context, userInfo *UserInfo, requestID int64) error {
+	if err := validateAdminRole(userInfo); err != nil {
+		return err
+	}
+	
 	request, err := b.boothRequestRepository.FindByID(requestID)
 	if err != nil {
 		return err

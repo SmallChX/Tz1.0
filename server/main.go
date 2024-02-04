@@ -2,6 +2,7 @@ package main
 
 import (
 	"jobfair2024/handler"
+	"jobfair2024/middleware"
 	"jobfair2024/repository"
 	"jobfair2024/setting"
 	"jobfair2024/usecase"
@@ -41,18 +42,18 @@ func main() {
 		// auth.GET("/logout/",)
 		auth.POST("/login", jobFairHandler.LoginWithAccount)
 		auth.POST("/logout", jobFairHandler.Logout)
-		auth.POST("/create-account", jobFairHandler.CreateAccount)
+		auth.POST("/create-account", middleware.AuthMiddleware(), jobFairHandler.CreateRequest)
 
 		booth := api.Group("/booth")
-		booth.GET("/get-all-booth", jobFairHandler.GetAllBooths)
+		booth.GET("/get-all-booth", middleware.AuthMiddleware(), jobFairHandler.GetAllBooths)
 
 		request := api.Group("/request")
-		request.GET("/", jobFairHandler.GetRequest)
-		request.GET("/get-all-request", jobFairHandler.GetAllRequests)
-		request.POST("/", jobFairHandler.CreateRequest)
-		request.PUT("/accept", jobFairHandler.AcceptRequest)
-		request.PUT("/reject", jobFairHandler.RejectRequest)
-		request.POST("/remove", jobFairHandler.RemoveRequest)
+		request.GET("/", middleware.AuthMiddleware(), jobFairHandler.GetRequest)
+		request.GET("/get-all-request", middleware.AuthMiddleware(), jobFairHandler.GetAllRequests)
+		request.POST("/", middleware.AuthMiddleware(), jobFairHandler.CreateRequest)
+		request.PUT("/accept", middleware.AuthMiddleware(), jobFairHandler.AcceptRequest)
+		request.PUT("/reject", middleware.AuthMiddleware(), jobFairHandler.RejectRequest)
+		request.POST("/remove", middleware.AuthMiddleware(), jobFairHandler.RemoveRequest)
 
 	}
 

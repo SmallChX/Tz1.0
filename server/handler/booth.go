@@ -9,10 +9,15 @@ import (
 // Get All Booth
 // Endpoint: /api/booth/get-all-booth [GET]
 func (h *JobFairHandler) GetAllBooths(c *gin.Context) {
-	boothList, err := h.boothUsecase.GetAllBooths(c)
+	userInfo := h.getUserInfoFromContext(c)
+	if userInfo == nil {
+		return
+	}
+
+	boothList, err := h.boothUsecase.GetAllBooths(c, userInfo)
 	if err != nil {
 		responseServerError(c, pkg.ParseError(err))
-		return 
+		return
 	}
 
 	responseSuccess(c, boothList)

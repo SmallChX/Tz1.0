@@ -3,9 +3,26 @@ package handler
 import (
 	"jobfair2024/pkg"
 	"jobfair2024/pkg/util"
+	"jobfair2024/usecase"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+func (h *JobFairHandler) getUserInfoFromContext(c *gin.Context) *usecase.UserInfo {
+	value, exists := c.Get("userInfo")
+	if !exists {
+		responseNotAuthorized(c, pkg.NotExist)
+		return nil
+	}
+
+	userInfo, ok := value.(*usecase.UserInfo)
+	if !ok {
+		responseServerError(c, pkg.GeneralFailure)
+		return nil
+	}
+	return userInfo
+}
 
 // Login with account
 // Endpoint: /api/auth/login [POST]
@@ -27,11 +44,23 @@ func (h *JobFairHandler) LoginWithAccount(c *gin.Context) {
 		return
 	}
 
-	err = util.GenerateToken(c, userInfo)
+	signedToken, expiredTime, err := util.GenerateToken(c, userInfo)
 	if err != nil {
 		responseServerError(c, pkg.ParseError(err))
 		return
 	}
+
+	cookie := &http.Cookie{
+		Name:     "authToken",
+		Value:    signedToken,
+		Path:     "/",
+		Expires:  expiredTime,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+
+	http.SetCookie(c.Writer, cookie)
 
 	responseSuccess(c, "ok")
 }
@@ -60,15 +89,21 @@ type CreateAccountReq struct {
 }
 
 func (h *JobFairHandler) CreateAccount(c *gin.Context) {
+	userInfo := h.getUserInfoFromContext(c)
+	if userInfo == nil {
+		return
+	}
+
 	var req CreateAccountReq
 	if err := c.ShouldBind(&req); err != nil {
 		responseServerError(c, pkg.ParseError(err))
 		return
 	}
 
-	err := h.authenticationUsecase.CreateAccount(c, req.Username, req.Password)
+	err := h.authenticationUsecase.CreateAccount(c, req.Username, req.Password, userInfo)
 	if err != nil {
 		responseServerError(c, pkg.ParseError(err))
+		return
 	}
 
 	responseSuccess(c, "ok")

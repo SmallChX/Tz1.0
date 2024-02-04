@@ -11,9 +11,9 @@ import (
 // Mỗi Booth chỉ được có một Company.
 // Quyền xử lý: admin, company.
 type BoothUsecase interface {
-	GetBooth(c *gin.Context, boothID int64) (*model.Booth, error) // Lấy thông tin của Booth. Chưa biết dùng ở đâu
-	GetAllBooths(c *gin.Context) ([]model.Booth, error)           // Lấy tất cả danh sách của Booth
-	
+	GetBooth(c *gin.Context, userInfo *UserInfo, boothID int64) (*model.Booth, error) // Lấy thông tin của Booth. Chưa biết dùng ở đâu
+	GetAllBooths(c *gin.Context, userInfo *UserInfo) ([]model.Booth, error)           // Lấy tất cả danh sách của Booth
+
 }
 
 type boothImpl struct {
@@ -27,7 +27,7 @@ func NewBoothUsecase(
 		boothRepository: boothRepository,
 	}
 }
-func (b *boothImpl) GetBooth(c *gin.Context, boothID int64) (*model.Booth, error) {
+func (b *boothImpl) GetBooth(c *gin.Context, userInfo *UserInfo, boothID int64) (*model.Booth, error) {
 	// Xác thực role từ jwt: company và admin.
 	// Lấy thông tin từ database và return.
 	// Đối với company: Hiển thị và có quyền xử lý Booth.
@@ -40,10 +40,15 @@ func (b *boothImpl) GetBooth(c *gin.Context, boothID int64) (*model.Booth, error
 	return booth, nil
 }
 
-func (b *boothImpl) GetAllBooths(c *gin.Context) ([]model.Booth, error) {
+func (b *boothImpl) GetAllBooths(c *gin.Context, userInfo *UserInfo) ([]model.Booth, error) {
 	// Xác thực role từ jwt: company và admin.
 	// Đối với company, kiểm tra thêm phân hạng, dựa vào phân hạng mà trả về danh sách tương ứng.
 	// Lấy thông tin từ database và return.
+	err1 := validateAdminRole(userInfo)
+	err2 := validateCompanyRole(userInfo)
+	if err1 != nil && err2 != nil {
+		return nil, err1
+	}
 
 	booths, err := b.boothRepository.FindAll()
 	if err != nil {
@@ -52,15 +57,3 @@ func (b *boothImpl) GetAllBooths(c *gin.Context) ([]model.Booth, error) {
 
 	return booths, nil
 }
-
-// Xác thực role từ jwt: admin, company
-// Kiểm tra Booth đích trong database đã có Company sở hữu chưa.
-// Kiểm tra phân hạng của Company, nếu không thì xem như Booth đó đã có người đăng ký???
-// Create Request với Type: Change và chờ admin xử lý.
-// Đổi theo số lượng tương ứng mà Company chọn??
-// func (b *boothImpl) ChangeBoothCompany() {}
-
-// Xác thực role từ jwt: admin, company.
-// Lấy id từ jwt trong Company => Kiểm tra trong database xem có đúng với id Booth của Request.
-// Create Request với Type: Delete, kèm lý do và chờ admin xử lý.
-// func (b *boothImpl) RemoveBoothCompany() {}

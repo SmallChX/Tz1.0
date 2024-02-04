@@ -19,8 +19,13 @@ func (h *JobFairHandler) GetRequest(c *gin.Context) {
 		responseBadRequestError(c, pkg.BindingFailure)
 		return
 	}
+	
+	userInfo := h.getUserInfoFromContext(c)
+	if userInfo == nil {
+		return
+	}
 
-	request, err := h.boothRequestUsecase.GetRequest(c, req.RequestID)
+	request, err := h.boothRequestUsecase.GetRequest(c, userInfo, req.RequestID)
 	if err != nil {
 		responseServerError(c, pkg.ParseError(err))
 	}
@@ -31,7 +36,12 @@ func (h *JobFairHandler) GetRequest(c *gin.Context) {
 // Get all request
 // Router: /api/request/get-all-request [GET]
 func (h *JobFairHandler) GetAllRequests(c *gin.Context) {
-	requestList, err := h.boothRequestUsecase.GetAllRequest(c)
+	userInfo := h.getUserInfoFromContext(c)
+	if userInfo == nil {
+		return
+	}
+
+	requestList, err := h.boothRequestUsecase.GetAllRequest(c, userInfo)
 	if err != nil {
 		responseServerError(c, pkg.ParseError(err))
 		return
@@ -56,7 +66,12 @@ func (h *JobFairHandler) CreateRequest(c *gin.Context) {
 		return
 	}
 
-	err := h.boothRequestUsecase.CreateRequest(c, &usecase.BoothRequestInfo{
+	userInfo := h.getUserInfoFromContext(c)
+	if userInfo == nil {
+		return
+	}
+
+	err := h.boothRequestUsecase.CreateRequest(c, userInfo, &usecase.BoothRequestInfo{
 		BoothIDList:            req.BoothIDList,
 		Type:                   req.Type,
 		Reason:                 req.Reason,
@@ -84,7 +99,12 @@ func (h *JobFairHandler) AcceptRequest(c *gin.Context) {
 		return
 	}
 
-	err := h.boothRequestUsecase.AcceptRequest(c, req.RequestID)
+	userInfo := h.getUserInfoFromContext(c)
+	if userInfo == nil {
+		return
+	}
+
+	err := h.boothRequestUsecase.AcceptRequest(c, userInfo, req.RequestID)
 	if err != nil {
 		responseServerError(c, pkg.ParseError(err))
 		return
@@ -103,7 +123,12 @@ func (h *JobFairHandler) RejectRequest(c *gin.Context) {
 		return
 	}
 
-	err := h.boothRequestUsecase.RejectRequest(c, req.RequestID)
+	userInfo := h.getUserInfoFromContext(c)
+	if userInfo == nil {
+		return
+	}
+
+	err := h.boothRequestUsecase.RejectRequest(c, userInfo, req.RequestID)
 	if err != nil {
 		responseBadRequestError(c, pkg.ParseError(err))
 		return
@@ -126,7 +151,12 @@ func (h *JobFairHandler) RemoveRequest(c *gin.Context) {
 		return
 	}
 
-	err := h.boothRequestUsecase.DeleteRequest(c, req.RequestID)
+	userInfo := h.getUserInfoFromContext(c)
+	if userInfo == nil {
+		return
+	}
+
+	err := h.boothRequestUsecase.DeleteRequest(c, userInfo, req.RequestID)
 	if err != nil {
 		responseServerError(c, pkg.ParseError(err))
 		return

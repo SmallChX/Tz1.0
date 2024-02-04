@@ -11,6 +11,7 @@ const (
 type CompanyInformation struct {
 	ID   int64 `gorm:"unique"`
 	CompanyName string
+	IsContributor bool
 
 	UserAccountID int64
 	UserAccount   UserAccount `gorm:"foreignKey:UserAccountID"`

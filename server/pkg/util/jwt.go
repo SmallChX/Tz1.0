@@ -4,7 +4,6 @@ import (
 	"errors"
 	"jobfair2024/model"
 	"jobfair2024/usecase"
-	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -20,10 +19,10 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-func GenerateToken(c *gin.Context, userInfo *usecase.UserInfo) error {
+func GenerateToken(c *gin.Context, userInfo *usecase.UserInfo) (string, time.Time, error) {
 	tokenLifespan, err := strconv.Atoi(os.Getenv("TOKEN_HOUR_LIFESPAN"))
 	if err != nil {
-		return err
+		return "", time.Time{}, err
 	}
 
 	expiredTime := time.Now().Add(time.Hour * time.Duration(tokenLifespan))
@@ -39,30 +38,13 @@ func GenerateToken(c *gin.Context, userInfo *usecase.UserInfo) error {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString([]byte(os.Getenv("API_SECRET")))
 	if err != nil {
-		return err
+		return "", time.Time{}, err
 	}
 
-	cookie := &http.Cookie{
-		Name:     "authToken",
-		Value:    signedToken,
-		Path:     "/",
-		Expires:  expiredTime,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	}
-
-	http.SetCookie(c.Writer, cookie)
-	return nil
+	return signedToken, expiredTime, nil
 }
 
-func validateToken(c *gin.Context) (*Claims, error) {
-	cookie, err := c.Request.Cookie("authToken")
-	if err != nil {
-		return nil, err
-	}
-
-	tokenString := cookie.Value
+func ValidateToken(c *gin.Context, tokenString string) (*Claims, error) {
 	claims := &Claims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -78,13 +60,4 @@ func validateToken(c *gin.Context) (*Claims, error) {
 	}
 
 	return claims, nil
-}
-
-func GetUserRole(c *gin.Context, requiredRole model.UserRole) (model.UserRole, error) {
-	claims, err := validateToken(c)
-	if err != nil {
-		return "", err
-	}
-
-	return claims.UserRole, nil
 }

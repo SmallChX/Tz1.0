@@ -1,7 +1,7 @@
 package pkg
 
 type ServiceError struct {
-	Code int
+	Code   int
 	ErrMsg string
 }
 
@@ -15,7 +15,7 @@ func (s ServiceError) ErrCode() int {
 
 func NewCustomError(code int, errMsg string) ServiceError {
 	return ServiceError{
-		Code: code,
+		Code:   code,
 		ErrMsg: errMsg,
 	}
 }
@@ -30,4 +30,6 @@ func ParseError(err error) ServiceError {
 var (
 	GeneralFailure = ServiceError{Code: 10000, ErrMsg: "general failure"}
 	BindingFailure = ServiceError{Code: 10001, ErrMsg: "binding failure"}
+	NotExist       = ServiceError{Code: 10002, ErrMsg: "not exist"}
+	NotHaveRight   = ServiceError{Code: 10003, ErrMsg: "not have right"}
 )
