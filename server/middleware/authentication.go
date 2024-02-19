@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"jobfair2024/pkg"
 	"jobfair2024/pkg/util"
 	"jobfair2024/usecase"
 	"net/http"
@@ -31,3 +32,20 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func GetUserInfoFromContext(c *gin.Context) *usecase.UserInfo {
+	value, exists := c.Get("userInfo")
+	if !exists {
+		c.JSON(http.StatusForbidden, pkg.NotExist)
+		return nil
+	}
+
+	userInfo, ok := value.(*usecase.UserInfo)
+	if !ok {
+		c.JSON(http.StatusForbidden, pkg.NotHaveRight)
+		return nil
+	}
+	return userInfo
+}
+
+

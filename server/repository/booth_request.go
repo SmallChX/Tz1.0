@@ -12,6 +12,7 @@ type BoothRequestRepository interface {
 	Delete(id int64) error
 	FindByID(id int64) (*model.BoothRequest, error)
 	FindAll() ([]model.BoothRequest, error)
+	GetCompanyBoothRequests(companyID int64) ([]model.BoothRequest, error)
 }
 
 type boothRequestRepositoryImpl struct {
@@ -45,7 +46,7 @@ func (repo *boothRequestRepositoryImpl) Delete(id int64) error {
 // FindByID finds a Booth by its ID
 func (repo *boothRequestRepositoryImpl) FindByID(id int64) (*model.BoothRequest, error) {
 	var request model.BoothRequest
-	err := repo.db.First(&request, id).Error
+	err := repo.db.Preload("Booths").Preload("DestinationBooths").First(&request, id).Error
 
 	if err != nil {
 		return nil, err
@@ -57,7 +58,7 @@ func (repo *boothRequestRepositoryImpl) FindByID(id int64) (*model.BoothRequest,
 // FindAll returns all Booths in the database
 func (repo *boothRequestRepositoryImpl) FindAll() ([]model.BoothRequest, error) {
 	var requests []model.BoothRequest
-	err := repo.db.Find(&requests).Error
+	err := repo.db.Preload("Booths").Preload("DestinationBooths").Find(&requests).Error
 
 	if err != nil {
 		return nil, err
@@ -65,3 +66,13 @@ func (repo *boothRequestRepositoryImpl) FindAll() ([]model.BoothRequest, error) 
 
 	return requests, err
 }
+
+func (repo *boothRequestRepositoryImpl) GetCompanyBoothRequests(companyID int64) ([]model.BoothRequest, error) {
+    var boothRequests []model.BoothRequest
+    err := repo.db.Preload("Booths").Preload("DestinationBooths").Where("company_id = ?", companyID).Find(&boothRequests).Error
+    if err != nil {
+        return nil, err
+    }
+    return boothRequests, nil
+}
+

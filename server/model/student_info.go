@@ -13,5 +13,4 @@ type StudentInformation struct {
 	Major       string
 
 	UserAccountID int64 `gorm:"primaryKey"`
-	UserAccount `gorm:"foreignKey:UserAccountID"`
 }

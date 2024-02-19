@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"fmt"
+	"jobfair2024/middleware"
 	"jobfair2024/pkg"
 	"jobfair2024/usecase"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,8 +22,8 @@ func (h *JobFairHandler) GetRequest(c *gin.Context) {
 		responseBadRequestError(c, pkg.BindingFailure)
 		return
 	}
-	
-	userInfo := h.getUserInfoFromContext(c)
+
+	userInfo := middleware.GetUserInfoFromContext(c)
 	if userInfo == nil {
 		return
 	}
@@ -36,12 +39,29 @@ func (h *JobFairHandler) GetRequest(c *gin.Context) {
 // Get all request
 // Router: /api/request/get-all-request [GET]
 func (h *JobFairHandler) GetAllRequests(c *gin.Context) {
-	userInfo := h.getUserInfoFromContext(c)
+	userInfo := middleware.GetUserInfoFromContext(c)
 	if userInfo == nil {
 		return
 	}
 
 	requestList, err := h.boothRequestUsecase.GetAllRequest(c, userInfo)
+	if err != nil {
+		responseServerError(c, pkg.ParseError(err))
+		return
+	}
+
+	responseSuccess(c, requestList)
+}
+
+// Get company request
+// Router: /api/request/company [GET]
+func (h *JobFairHandler) GetCompanyRequests(c *gin.Context) {
+	userInfo := middleware.GetUserInfoFromContext(c)
+	if userInfo == nil {
+		return
+	}
+
+	requestList, err := h.boothRequestUsecase.GetCompanyBoothRequest(c, userInfo)
 	if err != nil {
 		responseServerError(c, pkg.ParseError(err))
 		return
@@ -66,7 +86,7 @@ func (h *JobFairHandler) CreateRequest(c *gin.Context) {
 		return
 	}
 
-	userInfo := h.getUserInfoFromContext(c)
+	userInfo := middleware.GetUserInfoFromContext(c)
 	if userInfo == nil {
 		return
 	}
@@ -99,7 +119,7 @@ func (h *JobFairHandler) AcceptRequest(c *gin.Context) {
 		return
 	}
 
-	userInfo := h.getUserInfoFromContext(c)
+	userInfo := middleware.GetUserInfoFromContext(c)
 	if userInfo == nil {
 		return
 	}
@@ -123,7 +143,7 @@ func (h *JobFairHandler) RejectRequest(c *gin.Context) {
 		return
 	}
 
-	userInfo := h.getUserInfoFromContext(c)
+	userInfo := middleware.GetUserInfoFromContext(c)
 	if userInfo == nil {
 		return
 	}
@@ -137,30 +157,104 @@ func (h *JobFairHandler) RejectRequest(c *gin.Context) {
 	responseSuccess(c, "ok")
 }
 
-// Remove request
-// Router: //api/request/ [DELETE]
-type DeleteRequestReq struct {
-	RequestID int64 `json:"request_id" binding:"required"`
-}
-
 func (h *JobFairHandler) RemoveRequest(c *gin.Context) {
-	var req DeleteRequestReq
-
-	if err := c.ShouldBind(&req); err != nil {
+	value := c.Param("request_id")
+	if value == "" {
 		responseBadRequestError(c, pkg.BindingFailure)
-		return
 	}
 
-	userInfo := h.getUserInfoFromContext(c)
+	userInfo := middleware.GetUserInfoFromContext(c)
 	if userInfo == nil {
 		return
 	}
+	requestID, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		responseServerError(c, pkg.ParseError(err))
+		return
+	}
 
-	err := h.boothRequestUsecase.DeleteRequest(c, userInfo, req.RequestID)
+	err = h.boothRequestUsecase.DeleteRequest(c, userInfo, requestID)
 	if err != nil {
 		responseServerError(c, pkg.ParseError(err))
 		return
 	}
 
 	responseSuccess(c, "ok")
+}
+
+// Finish the request already pay
+// Routes: /api/request/finish
+func (h *JobFairHandler) FinishRequest(c *gin.Context) {
+	var req UpdateRequestReq
+
+	if err := c.ShouldBind(&req); err != nil {
+		responseBadRequestError(c, pkg.BindingFailure)
+		return
+	}
+
+	userInfo := middleware.GetUserInfoFromContext(c)
+	if userInfo == nil {
+		return
+	}
+
+	err := h.boothRequestUsecase.FinishRequest(c, userInfo, req.RequestID)
+	if err != nil {
+		responseBadRequestError(c, pkg.ParseError(err))
+		return
+	}
+
+	responseSuccess(c, "ok")
+}
+
+// Get Payment for request
+// Routes: /api/request/payment
+func (h *JobFairHandler) GetPayment(c *gin.Context) {
+	value := c.Param("request_id")
+	if value == "" {
+		responseBadRequestError(c, pkg.BindingFailure)
+	}
+
+	userInfo := middleware.GetUserInfoFromContext(c)
+	if userInfo == nil {
+		return
+	}
+
+	requestID, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		responseServerError(c, pkg.ParseError(err))
+		return
+	}
+
+	paymentInfo, err := h.boothRequestUsecase.GetRequestPaymentInfo(c, userInfo, requestID)
+	if err != nil {
+		responseBadRequestError(c, pkg.ParseError(err))
+		return
+	}
+
+	responseSuccess(c, paymentInfo)
+
+}
+
+// Handle list of requests
+// Endpoint: /api/request/handle-list
+func (h *JobFairHandler) HandleRequestList(c *gin.Context) {
+	userInfo := middleware.GetUserInfoFromContext(c)
+	if userInfo == nil {
+		return
+	}
+
+	var req []usecase.RequestUpdateInfo
+	if err := c.ShouldBind(&req); err != nil {
+		responseBadRequestError(c, pkg.BindingFailure)
+		return
+	}
+	fmt.Print(req)
+
+	if err := h.boothRequestUsecase.UpdateRequestList(c, userInfo, req); err != nil {
+		responseServerError(c, pkg.ParseError(err))
+		return
+	}
+
+	responseSuccess(c, "ok")
+
 }

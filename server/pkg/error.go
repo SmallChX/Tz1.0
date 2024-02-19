@@ -32,4 +32,5 @@ var (
 	BindingFailure = ServiceError{Code: 10001, ErrMsg: "binding failure"}
 	NotExist       = ServiceError{Code: 10002, ErrMsg: "not exist"}
 	NotHaveRight   = ServiceError{Code: 10003, ErrMsg: "not have right"}
+	InvalidProfile = ServiceError{Code: 10004, ErrMsg: "invalid profile"}
 )

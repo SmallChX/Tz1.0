@@ -15,7 +15,7 @@ import (
 type Claims struct {
 	UserID   int64          `json:"user_id"`
 	UserRole model.UserRole `json:"user_role"`
-	Email    string
+	Email    *string
 	jwt.StandardClaims
 }
 

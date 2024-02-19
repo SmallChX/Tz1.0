@@ -1,0 +1,236 @@
+@keyframes blink {
+  50% {
+    border-color: transparent; /* Làm mờ viền tại 50% thời gian */
+  }
+}
+
+.border-add {
+  animation: blink 1s linear infinite;
+  border: 8px solid green;
+}
+
+.border-edit {
+  animation: blink 1s linear infinite;
+  border: 8px solid blue;
+}
+
+.border-delete {
+  animation: blink 1s linear infinite;
+  border: 8px solid rgb(243, 189, 114);
+}
+
+
+
+.booth-layoutrow {
+    align-items: stretch;
+}
+/* .booth-layoutside-A, .booth-layoutside-B {
+    flex: 1;
+} */
+.booth-layoutside-B {
+    width: 600px;
+}
+.booth-layoutblock-1, .booth-layoutblock-2, .booth-layoutblock-3 {
+    flex: 1;
+    /* overflow: auto;  */
+}
+.booth-layoutmiddle {
+    align-items: center;
+}
+.booth-layoutcenter {
+    justify-self: center;
+}
+.booth-layoutentrance {
+    border-radius: 15px;
+    background-color: #ff6c22;
+}
+.booth-layoutstage {
+    height: 3em;
+    width: 5em;
+    margin: 0.5em;
+}
+.booth-layoutgate {
+    height: 6em;
+    width: 4em;
+    overflow: auto;
+}
+
+.booth-layoutH6 {
+    width: 100%;
+}
+
+.booth-layoutH6-side {
+    height: 7em;
+    width: 8em;
+}
+.booth-layoutH6-side .booth-layoutside {
+    width: 5em;
+    padding-top: 12px;
+    align-items: center;
+}
+.booth-layoutH6-side .booth-layoutH6 {
+    width: 2em;
+}
+
+.booth-layouttop {
+    height: 50px;
+}
+.booth-layoutH6 {
+    background-color:#3363ea;
+}
+.booth-layoutgrass {
+    
+    padding: 5px 12px;
+    background-color: #1a4d2e;
+}
+
+.booth-layoutblock-1 {
+    display: block;
+    /* background-color: rgb(169, 71, 71); */
+}
+
+.booth-layoutrow {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.booth-layoutcolumn {
+    display: flex;
+    flex-direction: column;
+}
+
+.booth-layoutleft {
+    flex: 1;
+}
+
+.booth-layoutright {
+    flex: 1;
+}
+
+.booth-layoutpadding {
+  padding: 12px 0px 6px 12px;
+}
+
+.booth-layoutblock-bottom-booth {
+  margin-left: 18px;
+  width: 100%;
+}
+
+.booth-layoutindividual-booth {
+    width: 2em; /* Size of the outer square */
+    height: 2em; /* Size of the outer square */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    border-radius: 15%; /* Rounded corners of the square */
+    margin: 8px 2px;
+    background-color: #3363ea;
+    cursor: pointer;
+  }
+
+  .booth-layoutindividual-booth::before {
+    content: '';
+    position: absolute;
+    width: 90%; 
+    height: 90%; 
+    background-color: white; 
+    border-radius: 50%; 
+  }
+
+  .booth-layoutindividual-booth.booth-layoutselected {
+    border-color: #f00; /* or any highlight color */
+    border-width: 1px;
+    background-color: #3363ea !important; /* or any highlight color */
+}
+
+
+  .booth-layoutindividual-booth span {
+    position: absolute;
+    font-size: 0.8em; /* Size of the number */
+    font-weight: 500;
+    z-index: 1;
+  }
+
+  .booth-layoutspace {
+    justify-content: space-around;
+  }
+
+  .booth-layoutbooth-1 {
+    height: 150px;
+    width: 150px;
+  }
+
+  .booth-layoutbooth-1 .booth-layoutblock-a {
+    margin-left: 8px;
+    margin-right: 12px;
+  }
+  .booth-layoutbooth-1 .booth-layoutblock-b {
+    height: 150px;
+  }
+
+  .booth-layoutmiddle-grass {
+    margin-top: 120px;
+  }
+
+  .booth-layoutcheckin {
+    /* width: 100px; */
+    height: 40px;
+    text-align: center;
+  }
+  .booth-layoutbackdrop {
+    background-color: white;
+    color: white;
+    width: 100px;
+    text-align: center;
+    margin-left: 8px;
+  }
+
+  .booth-layoutglory {
+    margin-left: 12px;
+    height: 60px;
+  }
+
+  .booth-layoutindividual-booth.booth-layouthidden {
+    background-color: #ccc !important; /* Gray out hidden booths */
+    pointer-events: none; /* Disable interactions */
+    color: #666 o !important; /* Dim the text color */
+}
+.booth-layoutindividual-booth.booth-layoutowned {
+  background-color: rgb(74, 241, 144) !important;
+  color: #666;
+}
+
+.booth-layoutindividual-booth.booth-layoutdeselected {
+  /* background-color: darkblue; */
+  opacity: 20%;
+  color: blue;
+}
+
+.booth-layoutindividual-booth.expensive-booth {
+  background-color: #ff80ab;
+}
+
+.booth-layoutindividual-booth.cheap-booth {
+  background-color: #fbab00;
+}
+
+.plaque {
+  /* height: 300px;
+  width: 300px; */
+  background: -webkit-radial-gradient(0% 100%, circle, transparent 15%,#1a4d2e 15%) no-repeat, -webkit-radial-gradient(100% 0%, circle, transparent 15%, #1a4d2e 15%) no-repeat, -webkit-radial-gradient(0% 0%, circle, transparent 15%, #1a4d2e 15%) no-repeat, -webkit-radial-gradient(100% 100%, circle, transparent 15%, #1a4d2e 15%) no-repeat;
+  background: radial-gradient(circle at 0% 100%, transparent 15%, #1a4d2e 15%) no-repeat, radial-gradient(circle at 100% 0%, transparent 15%, #1a4d2e 15%) no-repeat, radial-gradient(circle at 0% 0%, transparent 15%, #1a4d2e 15%) no-repeat, radial-gradient(circle at 100% 100%, transparent 15%, #1a4d2e 15%) no-repeat;
+  background-position: 0% 100%, 100% 0%, 0% 0%, 100% 100%;
+  background-size: 60% 60%;
+}
+
+.long-plaque {
+  /* height: 300px;
+  width: 300px; */
+  color: #1a4d2e;
+  background: -webkit-radial-gradient(0% 100%, circle, transparent 15%,#1a4d2e 15%) no-repeat, -webkit-radial-gradient(100% 0%, circle, transparent 15%, #1a4d2e 15%) no-repeat, -webkit-radial-gradient(0% 0%, circle, transparent 15%, #1a4d2e 15%) no-repeat, -webkit-radial-gradient(100% 100%, circle, transparent 15%, #1a4d2e 15%) no-repeat;
+  background: radial-gradient(circle at 0% 100%, transparent 15%, #1a4d2e 15%) no-repeat, radial-gradient(circle at 100% 0%, transparent 15%, #1a4d2e 15%) no-repeat, radial-gradient(circle at 0% 0%, transparent 15%, #1a4d2e 15%) no-repeat, radial-gradient(circle at 100% 100%, transparent 15%, #1a4d2e 15%) no-repeat;
+  background-position: 0% 100%, 100% 0%, 0% 0%, 100% 100%;
+  background-size: 10% 70%;
+}

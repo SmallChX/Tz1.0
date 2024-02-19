@@ -42,7 +42,11 @@ func (repo *userAccountRepositoryImpl) Update(user *model.UserAccount) error {
 
 // Delete removes a UserAccount from the database
 func (repo *userAccountRepositoryImpl) Delete(id int64) error {
-	return repo.db.Delete(&model.UserAccount{}, id).Error
+	user, err := repo.FindByID(id)
+	if err != nil {
+		return err
+	}
+	return repo.db.Select("CompanyInfo", "AdminInfo", "StudentInfo").Delete(&user).Error
 }
 
 // FindByID finds a UserAccount by its ID
@@ -55,7 +59,7 @@ func (repo *userAccountRepositoryImpl) FindByID(id int64) (*model.UserAccount, e
 // FindAll returns all UserAccounts in the database
 func (repo *userAccountRepositoryImpl) FindAll() ([]model.UserAccount, error) {
 	var users []model.UserAccount
-	err := repo.db.Find(&users).Error
+	err := repo.db.Preload("CompanyInfo").Preload("StudentInfo").Preload("AdminInfo").Find(&users).Error
 	return users, err
 }
 

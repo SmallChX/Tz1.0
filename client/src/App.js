@@ -1,9 +1,13 @@
-import './App.css';
-import Login from './pages/Login/Login.js';
+import AppRoutes from './routes/AppRoutes';
+import React from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 function App() {
   return (
-    <Login />
+    <React.Fragment>
+      <AppRoutes />
+  </React.Fragment>
   );
 }
 

@@ -12,8 +12,6 @@ import (
 // Xử lý về phân quyền và xác thực người dùng
 type AuthenticationUsecase interface {
 	Login(c *gin.Context, username string, password string) (*UserInfo, error)
-	CreateAccount(c *gin.Context, username string, password string, useInfo *UserInfo) error
-	GetUserInfo(c *gin.Context, id int64, role model.UserRole) (interface{}, error)
 }
 
 type authenticationImpl struct {
@@ -32,9 +30,12 @@ func NewAuthenticationUsecase(
 }
 
 type UserInfo struct {
-	ID    int64
-	Role  model.UserRole
-	Email string
+	ID         int64          `json:"user_id"`
+	Role       model.UserRole `json:"role"`
+	Email      *string        `json:"mail"`
+	UserName   string         `json:"username"`
+	Name       string         `json:"name"`
+	FirstLogin bool           `json:"first_login"`
 }
 
 func (a *authenticationImpl) Login(c *gin.Context, username string, password string) (*UserInfo, error) {
@@ -55,61 +56,8 @@ func (a *authenticationImpl) Login(c *gin.Context, username string, password str
 		ID:    userAccount.ID,
 		Role:  userAccount.Role,
 		Email: userAccount.Email,
+		FirstLogin: userAccount.FirstLogin,
 	}
 
 	return userInfo, nil
-}
-
-func (a *authenticationImpl) CreateAccount(c *gin.Context, username string, password string, userInfo *UserInfo) error {
-	if err := validateAdminRole(userInfo); err != nil {
-		return err
-	}
-
-	// if useAccount, _ := a.userAccountRepository.FindByUsername(username); useAccount != nil {
-	// 	return errors.New("already have username")
-	// }
-
-	hashPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	userAccount := &model.UserAccount{
-		Username: username,
-		Password: string(hashPassword),
-		Role:     model.Company,
-	}
-
-	err = a.userAccountRepository.Create(userAccount)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (a *authenticationImpl) GetUserInfo(c *gin.Context, id int64, role model.UserRole) (interface{}, error) {
-	switch role {
-	case model.Admin:
-		userInfo, err := a.adminRepository.FindByID(id)
-		if err != nil {
-			return nil, err
-		}
-		return userInfo, nil
-	case model.Company:
-		companyInfo, err := a.companyInfoRepository.FindByID(id)
-		if err != nil {
-			return nil, err
-		}
-		return companyInfo, nil
-	case model.Student:
-		studentInfo, err := a.studentRepository.FindByID(id)
-		if err != nil {
-			return nil, err
-		}
-		return studentInfo, nil
-
-	}
-
-	return nil, nil
 }
