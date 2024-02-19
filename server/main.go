@@ -39,9 +39,7 @@ func main() {
 	jobFairHandler := handler.NewHandler(boothRequestUsecase, boothUsecase, authenticationUsecase, companyInfoUsecase, userAccountUsecase, notificationUsecase)
 	
 	router := gin.Default()
-	api := router.Group("/api")
-	{
-		auth := api.Group("/auth")
+		auth := router.Group("/auth")
 		auth.GET("/google/authorize", jobFairHandler.GoogleAuthorize)
 		auth.GET("/google/callback/", jobFairHandler.GoogleCallback)
 		// auth.GET("/login/account/",)
@@ -49,13 +47,13 @@ func main() {
 		auth.POST("/login", jobFairHandler.LoginWithAccount)
 		auth.POST("/logout", jobFairHandler.Logout)
 
-		booth := api.Group("/booth")
+		booth := router.Group("/booth")
 		booth.GET("/get-all-booth", middleware.AuthMiddleware(), jobFairHandler.GetAllBooths)
 		booth.GET("/company-owned-booth", middleware.AuthMiddleware(), jobFairHandler.GetCompanyOwnedBoothIDs)
 		booth.GET("/company", middleware.AuthMiddleware(), jobFairHandler.GetAllBoothCompany)
 		booth.PUT("/", middleware.AuthMiddleware(), jobFairHandler.UpdateBooth)
 
-		request := api.Group("/request")
+		request := router.Group("/request")
 		request.GET("/", middleware.AuthMiddleware(), jobFairHandler.GetRequest)
 		request.GET("/get-all-request", middleware.AuthMiddleware(), jobFairHandler.GetAllRequests)
 		request.GET("/company", middleware.AuthMiddleware(), jobFairHandler.GetCompanyRequests)
@@ -67,19 +65,19 @@ func main() {
 		request.DELETE("/:request_id", middleware.AuthMiddleware(), jobFairHandler.RemoveRequest)
 		request.GET("/:request_id/payment", middleware.AuthMiddleware(), jobFairHandler.GetPayment)
 
-		account := api.Group("/admin/account")
+		account := router.Group("/admin/account")
 		account.GET("/get-all-info", middleware.AuthMiddleware(), jobFairHandler.GetAllUserInfo)
 		account.DELETE("/:account_id", middleware.AuthMiddleware(), jobFairHandler.DeleteAccount)
 		account.POST("/reset-password", middleware.AuthMiddleware(), jobFairHandler.ResetPassword)
 		account.POST("/", middleware.AuthMiddleware(), jobFairHandler.CreateAccount)
 
-		notification := api.Group("/notification")
+		notification := router.Group("/notification")
 		notification.POST("/", middleware.AuthMiddleware(), jobFairHandler.SendNotification)
 
-		profile := api.Group("/profile")
+		profile := router.Group("/profile")
 		profile.PUT("/company", middleware.AuthMiddleware(), jobFairHandler.UpdateCompanyAccountInfo)
 		profile.GET("/company", middleware.AuthMiddleware(), jobFairHandler.GetCompanyInfo)
-	}
+
 
 	router.Run(":8080")
 }
