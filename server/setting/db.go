@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"jobfair2024/model"
 	"log"
+	"os"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
@@ -17,7 +18,8 @@ func GetDB() *gorm.DB {
 }
 
 func InitDB() {
-	dsn := "host=localhost port=5432 dbname=jobfair2023 user=postgres password=123456 sslmode=prefer connect_timeout=10"
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dsn := "host=localhost port=5432 dbname=jobfair2024 user=postgres password=" + dbPassword + " sslmode=prefer connect_timeout=10"
 
 	var err error
 
