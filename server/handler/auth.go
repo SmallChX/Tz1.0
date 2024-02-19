@@ -46,7 +46,6 @@ func (h *JobFairHandler) LoginWithAccount(c *gin.Context) {
 		Value:    signedToken,
 		Path:     "/",
 		Expires:  expiredTime,
-		HttpOnly: true,
 		Secure:   true,
 	}
 
