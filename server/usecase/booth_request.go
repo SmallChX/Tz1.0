@@ -222,7 +222,7 @@ func (b *boothRequestUsecaseImpl) CreateRequest(c *gin.Context, userInfo *UserIn
 
 func isAvailableBooth(booths []model.Booth) bool {
 	for _, booth := range booths {
-		if booth.CompanyID != 0 {
+		if booth.CompanyID != nil {
 			return false
 		}
 	}
@@ -243,7 +243,7 @@ func isContiniousBooths(booths []model.Booth) bool {
 
 func isCompanyBoothOwner(companyID int64, booths []model.Booth) bool {
 	for _, booth := range booths {
-		if booth.CompanyID != companyID {
+		if booth.CompanyID != &companyID {
 			return false
 		}
 	}
@@ -271,7 +271,7 @@ func (b *boothRequestUsecaseImpl) AcceptRequest(c *gin.Context, userInfo *UserIn
 		}
 		for _, booth := range request.Booths {
 			// Cập nhật CompanyID cho booth
-			booth.CompanyID = request.CompanyID
+			booth.CompanyID = &request.CompanyID
 			err = b.boothRepository.Update(&booth)
 			if err != nil {
 				return err
@@ -305,14 +305,14 @@ func (b *boothRequestUsecaseImpl) AcceptRequest(c *gin.Context, userInfo *UserIn
 		}
 
 		for _, booth := range request.Booths {
-			booth.CompanyID = 0
+			booth.CompanyID = nil
 			err = b.boothRepository.Update(&booth)
 			if err != nil {
 				return err
 			}
 		}
 		for _, booth := range desBooths {
-			booth.CompanyID = request.CompanyID
+			booth.CompanyID = &request.CompanyID
 			err = b.boothRepository.Update(&booth)
 			if err != nil {
 				return err
@@ -329,7 +329,7 @@ func (b *boothRequestUsecaseImpl) AcceptRequest(c *gin.Context, userInfo *UserIn
 			return errors.New("not match company own booths")
 		}
 		for _, booth := range request.Booths {
-			booth.CompanyID = 0
+			booth.CompanyID = nil
 			err = b.boothRepository.Update(&booth)
 			if err != nil {
 				return err

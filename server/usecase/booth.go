@@ -74,7 +74,7 @@ func (b *boothImpl) GetBooth(c *gin.Context, userInfo *UserInfo, boothID int64) 
 	if err != nil {
 		return nil, err
 	}
-	company, err := b.companyRepository.FindByID(booth.CompanyID)
+	company, err := b.companyRepository.FindByID(*booth.CompanyID)
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +109,8 @@ func (b *boothImpl) GetAllBooths(c *gin.Context, userInfo *UserInfo) ([]*BoothIn
 	boothInfoList := make([]*BoothInfo, 0)
 	for _, booth := range booths {
 		var boothCompany BoothCompany
-		if booth.CompanyID != 0 {
-			company, err := b.companyRepository.FindByID(booth.CompanyID)
+		if booth.CompanyID != nil {
+			company, err := b.companyRepository.FindByID(*booth.CompanyID)
 			if err != nil {
 				return nil, err
 			}
@@ -140,7 +140,7 @@ func (b *boothImpl) UpdateBooths(c *gin.Context, userInfo *UserInfo, boothInfoLi
 			return err
 		}
 
-		booth.CompanyID = boothInfo.Company.ID
+		booth.CompanyID = &boothInfo.Company.ID
 		booth.Level = boothInfo.Level
 		booth.Price = boothInfo.Price
 
@@ -162,7 +162,7 @@ func (b *boothImpl) UpdateBooth(c *gin.Context, userInfo *UserInfo, boothInfo Bo
 		return err
 	}
 
-	booth.CompanyID = boothInfo.Company.ID
+	booth.CompanyID = &boothInfo.Company.ID
 	booth.Level = boothInfo.Level
 	booth.Price = boothInfo.Price
 
