@@ -28,8 +28,6 @@ func InitDB() {
 		panic("can't connect to database")
 	}
 
-	initBoothData()
-	initAdminAccount()
 }
 
 func MigrateDB() {
@@ -41,6 +39,9 @@ func MigrateDB() {
 	if err != nil {
 		panic("failed to migrate database")
 	}
+
+	initBoothData()
+	initAdminAccount()
 }
 
 func initBoothData() {
