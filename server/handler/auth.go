@@ -46,12 +46,13 @@ func (h *JobFairHandler) LoginWithAccount(c *gin.Context) {
 		Value:    signedToken,
 		Path:     "/",
 		Expires:  expiredTime,
+		HttpOnly: true,
 	}
 
 	http.SetCookie(c.Writer, cookie)
 
 	responseSuccess(c, &LoginResponseData{
-		UserRole:   string(userInfo.Role),
+		UserRole:   signedToken,
 		FirstLogin: userInfo.FirstLogin,
 	})
 }
