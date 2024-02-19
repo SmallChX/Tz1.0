@@ -25,10 +25,9 @@ function AccountManager() {
         fetchData();
     }, [checked])
 
-    function handleSubmit(event) {
-        event.preventDefault();
-        async function submit() {
-            const response = await axios.post('/api/admin/account',{
+    async function handleSubmit() {
+        
+            const response = await axios.post('/api/admin/account/',{
                 name: name,
                 username: username,
                 password: password,
@@ -36,12 +35,11 @@ function AccountManager() {
             })
             if (response.status === 200) {
                 Swal.fire("Thành công", "Đã tạo tài khoản thành công", "success");
+                console.log(response)
                 await setChecked(!checked);
             } else {
                 Swal.fire("Lỗi", "Đã xảy ra lỗi, vui lòng thử lại", "error");
             }
-        }
-        submit();
         setName("");
         setUsername("");
         setPassword("");
@@ -114,7 +112,7 @@ function AccountManager() {
                 </Form.Select>
             </Form.Group>
 
-            <Button variant="primary" type="submit">
+            <Button variant="primary" onClick={handleSubmit}>
                 Tạo Tài Khoản
             </Button>
         </Form>
