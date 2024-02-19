@@ -94,7 +94,7 @@ function useBoothRegistration(ownedBooths) {
                     icon: "question",
                     confirmButtonText:"Xác nhận!",
                     preConfirm: async () => {
-                        const response = await axios.post('/api/request', {
+                        const response = await axios.post('/api/request/', {
                             booth_id: selectedBoothIds,
                             type: 'regist',
                         })
