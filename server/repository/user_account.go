@@ -2,7 +2,6 @@ package repository
 
 import (
 	"jobfair2024/model"
-	"jobfair2024/setting"
 
 	"gorm.io/gorm"
 )
@@ -24,10 +23,6 @@ func NewUserAccountRepository(db *gorm.DB) UserAccountRepository {
 	return &userAccountRepositoryImpl{
 		db: db,
 	}
-}
-
-func (repo *userAccountRepositoryImpl) GetDB() *gorm.DB {
-	return setting.GetDB()
 }
 
 // Create adds a new UserAccount to the database

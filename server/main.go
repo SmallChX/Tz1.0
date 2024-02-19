@@ -37,7 +37,7 @@ func main() {
 	notificationUsecase := usecase.NewNotificationUsecase(notificationRepository, userAccountRepository)
 
 	jobFairHandler := handler.NewHandler(boothRequestUsecase, boothUsecase, authenticationUsecase, companyInfoUsecase, userAccountUsecase, notificationUsecase)
-
+	
 	router := gin.Default()
 	api := router.Group("/api")
 	{
