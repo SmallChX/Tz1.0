@@ -20,6 +20,7 @@ type LoginInfoReq struct {
 type LoginResponseData struct {
 	UserRole   string `json:"user_role"`
 	FirstLogin bool   `json:"first_login"`
+	Cookie string `json:"cookie"`
 }
 
 func (h *JobFairHandler) LoginWithAccount(c *gin.Context) {
@@ -52,8 +53,9 @@ func (h *JobFairHandler) LoginWithAccount(c *gin.Context) {
 	http.SetCookie(c.Writer, cookie)
 
 	responseSuccess(c, &LoginResponseData{
-		UserRole:   signedToken,
+		UserRole:   string(userInfo.Role),
 		FirstLogin: userInfo.FirstLogin,
+		Cookie: signedToken,
 	})
 }
 
